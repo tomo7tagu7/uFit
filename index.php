@@ -261,16 +261,16 @@ const PRODUCTS = [
   { category: "完全栄養WHEY PROTEIN", name: "1kg [ミックスベリー]", price: "¥6,480" },
   { category: "完全栄養WHEY PROTEIN", name: "1kg [ヨーグルト]", price: "¥6,480" },
   { category: "完全栄養WHEY PROTEIN", name: "1kg [黒糖きな粉]", price: "¥6,480" },
-  { category: "uFitジュニアプロテイン", name: "¥4,480(税込) [いちご]", price: "¥4,480(税込)" },
-  { category: "uFitジュニアプロテイン", name: "¥4,480(税込) [ココア]", price: "¥4,480(税込)" },
-  { category: "uFitジュニアプロテイン", name: "¥4,480(税込) [バナナ]", price: "¥4,480(税込)" },
-  { category: "uFitジュニアプロテイン", name: "¥4,480(税込) [マスカット]", price: "¥4,480(税込)" },
+  { category: "uFitジュニアプロテイン", name: "uFitジュニアプロテイン [いちご]", price: "¥4,480(税込)" },
+  { category: "uFitジュニアプロテイン", name: "uFitジュニアプロテイン [ココア]", price: "¥4,480(税込)" },
+  { category: "uFitジュニアプロテイン", name: "uFitジュニアプロテイン [バナナ]", price: "¥4,480(税込)" },
+  { category: "uFitジュニアプロテイン", name: "uFitジュニアプロテイン [マスカット]", price: "¥4,480(税込)" },
   { category: "その他", name: "uFit Soy Protein お試し6フレーバーセット", price: "¥1,500(税込)" },
   { category: "その他", name: "完全栄養食お試し4フレーバーセット", price: "¥1,800(税込)" },
   { category: "その他", name: "uFit Whey Protein お試し5フレーバーセット", price: "¥1,250(税込)" },
   { category: "その他", name: "uFit Shaker", price: "¥500(税込)" },
   { category: "その他", name: "uFit Premium EAA 600g すっきりレモン風味", price: "¥4,980" },
-  { category: "開その他", name: "uFit Premium EAA 600g さっぱりキウイ風味", price: "¥4,980" }
+  { category: "その他", name: "uFit Premium EAA 600g さっぱりキウイ風味", price: "¥4,980" }
 ].map((p, i) => ({ ...p, id: i, sold: p.name.includes("売り切れ") }));
 
 /* =========================================================
