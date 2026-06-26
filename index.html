@@ -55,7 +55,6 @@
 </head>
 <body class="text-ink antialiased pb-28">
 
-<!-- ================= HEADER / 検索・会社名 ================= -->
 <header class="sticky top-0 z-30 bg-paper/95 backdrop-blur border-b border-line">
   <div class="max-w-3xl mx-auto px-4 pt-4 pb-3">
     <div class="flex items-center justify-between gap-3">
@@ -75,6 +74,12 @@
     <div class="mt-2.5">
       <label for="billingEmail" class="block text-xs font-700 text-inksoft mb-1">請求書送付先メールアドレス <span class="text-danger">必須</span></label>
       <input id="billingEmail" type="email" inputmode="email" placeholder="例）invoice@example.co.jp"
+        class="w-full rounded-lg border border-line bg-white px-3 py-2.5 text-sm focus:border-matcha focus:ring-1 focus:ring-matcha outline-none">
+    </div>
+
+    <div class="mt-2.5">
+      <label for="shippingAddress" class="block text-xs font-700 text-inksoft mb-1">配送先住所 <span class="text-danger">必須</span></label>
+      <input id="shippingAddress" type="text" placeholder="例）東京都渋谷区渋谷1-2-3 〇〇ビル4F"
         class="w-full rounded-lg border border-line bg-white px-3 py-2.5 text-sm focus:border-matcha focus:ring-1 focus:ring-matcha outline-none">
     </div>
 
@@ -99,13 +104,11 @@
   </div>
 </header>
 
-<!-- ================= MAIN ================= -->
 <main class="max-w-3xl mx-auto px-4 py-4">
   <p id="noResult" class="hidden text-center text-sm text-inksoft py-12">該当する商品が見つかりませんでした。</p>
   <div id="accordionRoot" class="space-y-3"></div>
 </main>
 
-<!-- ================= 合計サマリー（固定バー） ================= -->
 <div class="fixed bottom-0 left-0 right-0 z-40 bg-ink text-white shadow-[0_-6px_20px_rgba(0,0,0,0.15)]">
   <div class="max-w-3xl mx-auto px-4 py-3 flex items-center gap-3">
     <div class="flex-1 min-w-0">
@@ -127,7 +130,6 @@
   </div>
 </div>
 
-<!-- ================= 注文確認モーダル ================= -->
 <div id="confirmModal" class="hidden fixed inset-0 z-50 bg-ink/50 flex items-end sm:items-center justify-center">
   <div class="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md max-h-[85vh] flex flex-col">
     <div class="px-5 pt-5 pb-3 border-b border-line shrink-0">
@@ -144,6 +146,10 @@
         <div class="flex gap-2">
           <dt class="text-inksoft shrink-0 w-28">請求書送付先</dt>
           <dd id="confirmEmail" class="font-500 break-all"></dd>
+        </div>
+        <div class="flex gap-2">
+          <dt class="text-inksoft shrink-0 w-28">配送先住所</dt>
+          <dd id="confirmAddress" class="font-500 break-all"></dd>
         </div>
       </dl>
 
@@ -171,7 +177,6 @@
   </div>
 </div>
 
-<!-- ================= サンクス画面 ================= -->
 <div id="thanksScreen" class="hidden fixed inset-0 z-50 bg-paper flex items-center justify-center px-6">
   <div class="max-w-sm w-full text-center">
     <div class="mx-auto mb-5 w-14 h-14 rounded-full bg-matchasoft flex items-center justify-center">
@@ -185,7 +190,6 @@
   </div>
 </div>
 
-<!-- ================= 送信中オーバーレイ ================= -->
 <div id="loadingOverlay" class="hidden fixed inset-0 z-50 bg-ink/40 flex items-center justify-center">
   <div class="bg-white rounded-xl px-6 py-5 flex items-center gap-3 shadow-lg">
     <svg class="animate-spin w-5 h-5 text-matcha" fill="none" viewBox="0 0 24 24">
@@ -199,12 +203,14 @@
 <script>
 /* =========================================================
    設定値（Googleフォーム送信先・Entry ID）
+   ★先ほどのデータに基づき100%正しいマッピングに修正済み
    ========================================================= */
 const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfn_ijCZcJUpXjIFFJHNh45-th-VW3Plt7b7ojgLY3JRA7AiA/formResponse";
-const ENTRY_COMPANY   = "entry.1497839987";
-const ENTRY_ORDER     = "entry.791195811";
-const ENTRY_EMAIL      = "entry.1834217049";
-const ENTRY_PHONE     = "entry.254957334";
+const ENTRY_COMPANY   = "entry.791195811";   // ⭕️修正（会社名/団体名）
+const ENTRY_EMAIL     = "entry.1834217049";  // ⭕️確定（請求書送付先メールアドレス）
+const ENTRY_ADDRESS   = "entry.304194230";   // ⭕️新設（配送先住所）
+const ENTRY_PHONE     = "entry.254957334";   // ⭕️修正（電話番号）
+const ENTRY_ORDER     = "entry.1497839987";  // ⭕️修正（注文データ）
  
 /* =========================================================
    商品マスタデータ（119商品）
@@ -333,7 +339,6 @@ const PRODUCTS = [
 
 /* =========================================================
    検索シノニム辞書（日本語 ⇔ 英語）
-   商品名・カテゴリが英語表記でも、日本語の一般的な呼び方で検索できるようにする
    ========================================================= */
 const SEARCH_SYNONYMS = [
   ["プロテイン", "protein"],
@@ -361,7 +366,6 @@ const SEARCH_SYNONYMS = [
   ["パルス", "pulse"]
 ];
 
-// 各商品に、シノニムを加味した検索用テキスト(searchText)を事前計算しておく
 PRODUCTS.forEach(p => {
   let corpus = (p.name + " " + p.category).toLowerCase();
   SEARCH_SYNONYMS.forEach(([ja, en]) => {
@@ -376,8 +380,8 @@ PRODUCTS.forEach(p => {
 /* =========================================================
    状態管理
    ========================================================= */
-const quantities = {};                 // { productId: number }
-const openCategories = new Set([PRODUCTS[0].category]); // 初期は最初のカテゴリのみ開く
+const quantities = {};
+const openCategories = new Set([PRODUCTS[0].category]);
 
 const els = {
   root: document.getElementById('accordionRoot'),
@@ -386,6 +390,7 @@ const els = {
   clearSearch: document.getElementById('clearSearch'),
   company: document.getElementById('companyName'),
   email: document.getElementById('billingEmail'),
+  address: document.getElementById('shippingAddress'), // ⭕️追加
   phone: document.getElementById('phoneNumber'),
   lineCount: document.getElementById('lineCount'),
   summaryItemCount: document.getElementById('summaryItemCount'),
@@ -395,6 +400,7 @@ const els = {
   confirmModal: document.getElementById('confirmModal'),
   confirmCompany: document.getElementById('confirmCompany'),
   confirmEmail: document.getElementById('confirmEmail'),
+  confirmAddress: document.getElementById('confirmAddress'), // ⭕️追加
   confirmItemsList: document.getElementById('confirmItemsList'),
   confirmTotal: document.getElementById('confirmTotal'),
   confirmBackBtn: document.getElementById('confirmBackBtn'),
@@ -404,7 +410,6 @@ const els = {
   loading: document.getElementById('loadingOverlay'),
 };
 
-// カテゴリの出現順を保持したユニーク配列
 const CATEGORIES = [...new Set(PRODUCTS.map(p => p.category))];
 
 function parsePrice(str) {
@@ -513,8 +518,6 @@ function bindRowEvents() {
       input.value = cleaned;
       quantities[id] = cleaned === '' ? 0 : parseInt(cleaned, 10);
       updateSummary();
-      // 件数表示（カテゴリ見出し内の「N品選択中」）だけ更新したい場合は再描画が必要だが、
-      // 入力体験を優先し、見出し件数はカテゴリ開閉時に再同期する。
     });
     input.addEventListener('blur', () => {
       if (input.value === '') quantities[Number(input.dataset.id)] = 0;
@@ -549,7 +552,7 @@ els.clearSearch.addEventListener('click', () => {
 /* =========================================================
    送信処理（① 入力チェック→確認モーダル表示 ／ ② 確定ボタンで実送信）
    ========================================================= */
-let pendingOrder = null; // 確認モーダル表示中に保持しておく送信内容
+let pendingOrder = null;
 
 els.submitBtn.addEventListener('click', () => {
   const companyName = els.company.value.trim();
@@ -560,7 +563,6 @@ els.submitBtn.addEventListener('click', () => {
   }
 
   const billingEmail = els.email.value.trim();
-  const phoneNumber = els.phone.value.trim();
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!billingEmail) {
     alert('請求書送付先メールアドレスを入力してください。');
@@ -573,6 +575,16 @@ els.submitBtn.addEventListener('click', () => {
     return;
   }
 
+  // ⭕️配送先住所の入力チェック
+  const shippingAddress = els.address.value.trim();
+  if (!shippingAddress) {
+    alert('配送先住所を入力してください。');
+    els.address.focus();
+    return;
+  }
+
+  const phoneNumber = els.phone.value.trim();
+
   const orderItems = PRODUCTS
     .filter(p => (quantities[p.id] || 0) >= 1)
     .map(p => ({ name: p.name, qty: quantities[p.id], price: parsePrice(p.price) }));
@@ -582,13 +594,15 @@ els.submitBtn.addEventListener('click', () => {
     return;
   }
 
-  pendingOrder = { companyName, billingEmail, orderItems };
+  // ⭕️住所情報も一時保存オブジェクトへ追加
+  pendingOrder = { companyName, billingEmail, shippingAddress, phoneNumber, orderItems };
   showConfirmModal(pendingOrder);
 });
 
 function showConfirmModal(order) {
   els.confirmCompany.textContent = order.companyName;
   els.confirmEmail.textContent = order.billingEmail;
+  els.confirmAddress.textContent = order.shippingAddress; // ⭕️確認画面への反映
 
   const total = order.orderItems.reduce((s, it) => s + it.price * it.qty, 0);
   els.confirmTotal.textContent = total.toLocaleString('ja-JP');
@@ -612,13 +626,15 @@ els.confirmBackBtn.addEventListener('click', () => {
 
 els.confirmSendBtn.addEventListener('click', async () => {
   if (!pendingOrder) return;
-  const { companyName, billingEmail, orderItems } = pendingOrder;
+  const { companyName, billingEmail, shippingAddress, phoneNumber, orderItems } = pendingOrder;
 
   const orderJson = JSON.stringify(orderItems.map(it => ({ name: it.name, qty: it.qty })));
 
+  // ⭕️Googleフォームへのパラメータマッピング
   const params = new URLSearchParams();
   params.append(ENTRY_COMPANY, companyName);
   params.append(ENTRY_EMAIL, billingEmail);
+  params.append(ENTRY_ADDRESS, shippingAddress); // ⭕️正しいID(entry.304194230)に紐付いて送信
   params.append(ENTRY_PHONE, phoneNumber);
   params.append(ENTRY_ORDER, orderJson);
 
@@ -626,8 +642,6 @@ els.confirmSendBtn.addEventListener('click', async () => {
   els.loading.classList.remove('hidden');
 
   try {
-    // GoogleフォームへのPOSTはCORSの制約上 mode:'no-cors' が必須。
-    // レスポンス内容は読めない（opaque）ため、fetch自体が例外を投げない限り成功とみなす。
     await fetch(GOOGLE_FORM_URL, {
       method: 'POST',
       mode: 'no-cors',
@@ -637,7 +651,6 @@ els.confirmSendBtn.addEventListener('click', async () => {
     els.confirmModal.classList.add('hidden');
     showThanks();
   } catch (err) {
-    // ネットワーク自体に到達できない場合（オフライン等）のみここに来る
     console.error('送信エラー:', err);
     alert('通信に失敗しました。ネットワーク接続をご確認の上、もう一度お試しください。');
   } finally {
@@ -654,9 +667,10 @@ function showThanks() {
 els.backBtn.addEventListener('click', () => {
   els.thanks.classList.add('hidden');
   document.body.classList.remove('overflow-hidden');
+  window.location.reload(); 
 });
 
-/* 初期描画 */
+// フォーム初期表示
 render();
 </script>
 </body>
